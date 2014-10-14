@@ -1,7 +1,18 @@
 #!/bin/sh
 
+### BEGIN INIT INFO
+# Provides: carbon-cache
+# Required-Start: $remote_fs $syslog
+# Required-Stop: $remote_fs $syslog
+# Default-Start: 2 3 4 5
+# Default-Stop: 0 1 6
+# Short-Description: Carbon-Cache Server
+# Description: Carbon-Cache Server
+### END INIT INFO
+
 # Initscript for carbon-cache processes
 # Jason Dixon <jason@dixongroup.net>
+# Modified by Chad Lung <chad.lung@gmail.com>
 #
 # You must set the variables below. The
 # INSTANCES variable should be set to the

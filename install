@@ -1,16 +1,19 @@
 #!/bin/bash -ex
 # Graphite installation script for Ubuntu 14.04
-# Jason Dixon <jason@dixongroup.net>
+# Originally by Jason Dixon <jason@dixongroup.net>
+# Modified by Chad Lung <chad.lung@gmail.com>
 
-SYNTHESIZE_HOME=$PWD
+GRAPHITE_INSTALLER_HOME=$PWD
 UBUNTU_RELEASE=`lsb_release -a 2>/dev/null | grep '^Descrip' | cut -s -f 2`
 
 GRAPHITE_HOME='/opt/graphite'
 GRAPHITE_CONF="${GRAPHITE_HOME}/conf"
 GRAPHITE_STORAGE="${GRAPHITE_HOME}/storage"
 GRAPHITE_RELEASE='0.9.12'
+GRAPHITE_API_RELEASE='1.0.1'
+GRAPHITE_INDEX='/srv/graphite'
 
-if [[ ! $UBUNTU_RELEASE =~ 'Ubuntu 14.04.1 LTS' ]]; then
+if [[ ! $UBUNTU_RELEASE =~ 'Ubuntu 14.04 LTS' ]]; then
   echo "Sorry, this is only supported for Ubuntu Linux 14.04."
   exit 1
 fi
@@ -19,67 +22,54 @@ if [[ -d $GRAPHITE_HOME ]]; then
   exit 1
 fi
 
-# Update apt since the vagrant image might be old
+# Update apt since the image might be old
 apt-get update -y
 
 # Install package dependencies from apt
-RUNLEVEL=1 apt-get install -y libcairo2-dev pkg-config python-cairo python-dev python-pip fontconfig apache2 libapache2-mod-wsgi git-core collectd memcached gcc g++ make scons
+RUNLEVEL=1 apt-get install -y libcairo2-dev pkg-config python-cairo python-dev python-pip git-core build-essential libffi-dev
 
-# Download source repositories for Graphite/Carbon/Whisper and Statsite
+# Download source repositories for Graphite-API/Carbon
 cd /usr/local/src
-git clone https://github.com/graphite-project/graphite-web.git
 git clone https://github.com/graphite-project/carbon.git
+git clone https://github.com/brutasse/graphite-api.git
 git clone https://github.com/graphite-project/whisper.git
-git clone https://github.com/armon/statsite.git
 
-# Build and install Graphite/Carbon/Whisper and Statsite
-cd whisper; git checkout ${GRAPHITE_RELEASE}; python setup.py install
-cd ../carbon; git checkout ${GRAPHITE_RELEASE}; pip install -r requirements.txt; python setup.py install
-cd ../graphite-web; git checkout ${GRAPHITE_RELEASE}; pip install -r requirements.txt; python check-dependencies.py; python setup.py install
-cd ../statsite; make; cp statsite /usr/local/sbin/; cp sinks/graphite.py /usr/local/sbin/statsite-sink-graphite.py
+# Build and install Graphite-API/Carbon
+# Grab master  branch, 0.9.12 is broken with the daemonize issue that got merged back in
+cd /usr/local/src/carbon; pip install -r requirements.txt; python setup.py install
+#cd /usr/local/src/carbon; git checkout ${GRAPHITE_RELEASE}; pip install -r requirements.txt; python setup.py install
+cd /usr/local/src/graphite-api; git checkout ${GRAPHITE_API_RELEASE}; pip install -r requirements.txt; python setup.py install
+cd /usr/local/src/whisper; git checkout ${GRAPHITE_RELEASE}; python setup.py install
 
-# Install configuration files for Graphite/Carbon and Apache
-cp ${SYNTHESIZE_HOME}/templates/statsite/statsite.conf /etc/statsite.conf
+# Install Gunicorn
+pip install gunicorn
+
+# Create the index file so Gunicorn works
+mkdir $GRAPHITE_INDEX
+touch $GRAPHITE_INDEX/index
+
+# Install configuration files for Graphite-API/Carbon
 mkdir ${GRAPHITE_CONF}/examples
 mv ${GRAPHITE_CONF}/*.example ${GRAPHITE_CONF}/examples/
-cp ${SYNTHESIZE_HOME}/templates/graphite/conf/* ${GRAPHITE_CONF}/
-cp ${SYNTHESIZE_HOME}/templates/collectd/collectd.conf /etc/collectd/
-cp ${SYNTHESIZE_HOME}/templates/apache/graphite.conf /etc/apache2/sites-available/
-cp ${SYNTHESIZE_HOME}/templates/init/* /etc/init/
-cp ${SYNTHESIZE_HOME}/templates/init.d/* /etc/init.d/
-
-# Setup the correct Apache site and modules
-a2dissite 000-default
-a2ensite graphite
-a2enmod ssl
-a2enmod socache_shmcb
-
-# Install configuration files for Django
-cd ${GRAPHITE_HOME}/webapp/graphite
-cp ${SYNTHESIZE_HOME}/templates/graphite/webapp/* .
-sed -i -e "s/UNSAFE_DEFAULT/`date | md5sum | cut -d ' ' -f 1`/" local_settings.py
-
-# Setup the Django database
-python manage.py syncdb --noinput
-chown www-data:www-data ${GRAPHITE_STORAGE}/graphite.db
+cp ${GRAPHITE_INSTALLER_HOME}/templates/graphite/conf/* ${GRAPHITE_CONF}/
+# Kind of a weird location for this but that is where graphite-api first looks
+cp ${GRAPHITE_INSTALLER_HOME}/templates/graphite-api/conf/* /etc/
+cp ${GRAPHITE_INSTALLER_HOME}/templates/init.d/* /etc/init.d/
+cp ${GRAPHITE_INSTALLER_HOME}/templates/init/* /etc/init/
 
 # Add carbon system user and set permissions
 groupadd -g 998 carbon
 useradd -c "carbon user" -g 998 -u 998 -s /bin/false carbon
 chmod 775 ${GRAPHITE_STORAGE}
-chown www-data:carbon ${GRAPHITE_STORAGE}
 chown -R carbon ${GRAPHITE_STORAGE}/whisper
 chown carbon:carbon ${GRAPHITE_STORAGE}/log
-mkdir ${GRAPHITE_STORAGE}/log/apache2
-chown www-data ${GRAPHITE_STORAGE}/log/webapp
+
+update-rc.d carbon-cache defaults
 chmod +x /etc/init.d/carbon-cache
 
 # Start our processes
 service carbon-cache start
-service memcached start
-service collectd start
-service apache2 start
-service statsite start
+service graphite-api start
 
 # Fix log permissions after carbon starts
 chown -R carbon:carbon ${GRAPHITE_STORAGE}/log/carbon*
