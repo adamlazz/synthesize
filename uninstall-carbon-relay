@@ -1,0 +1,12 @@
+#!/bin/bash
+# Graphite carbon-relay uninstall script for Ubuntu 14.04 LTS
+# Jason Dixon <jason@dixongroup.net>
+# Modified by Chad Lung <chad.lung@gmail.com>
+
+service carbon-relay stop
+
+# Remove various binaries, configuration files, and source directories
+rm -r /opt/graphite
+rm -r /usr/local/src/carbon
+rm -r /srv/graphite
+rm /etc/init.d/carbon-relay

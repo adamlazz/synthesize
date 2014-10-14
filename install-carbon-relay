@@ -1,0 +1,53 @@
+#!/bin/bash -ex
+# Graphite Carbon-Relay installation script for Ubuntu 14.04
+# Originally by Jason Dixon <jason@dixongroup.net>
+# Modified by Chad Lung <chad.lung@gmail.com>
+#
+#
+# NOTE: You should not run this on the same machine as you run the INSTALL script
+#
+#
+
+GRAPHITE_INSTALLER_HOME=$PWD
+UBUNTU_RELEASE=`lsb_release -a 2>/dev/null | grep '^Descrip' | cut -s -f 2`
+
+GRAPHITE_HOME='/opt/graphite'
+GRAPHITE_CONF="${GRAPHITE_HOME}/conf"
+GRAPHITE_RELEASE='0.9.12'
+
+if [[ ! $UBUNTU_RELEASE =~ 'Ubuntu 14.04 LTS' ]]; then
+  echo "Sorry, this is only supported for Ubuntu Linux 14.04."
+  exit 1
+fi
+if [[ -d $GRAPHITE_HOME ]]; then
+  echo "Looks like you already have a Graphite installation in ${GRAPHITE_HOME}, aborting."
+  exit 1
+fi
+
+# Update apt since the image might be old
+apt-get update -y
+
+# Install package dependencies from apt
+RUNLEVEL=1 apt-get install -y libcairo2-dev pkg-config python-cairo python-dev python-pip git-core build-essential libffi-dev
+
+# Download source repositories for Graphite Carbon
+cd /usr/local/src
+git clone https://github.com/graphite-project/carbon.git
+
+# Build and install Graphite Carbon
+# Grab master  branch, 0.9.12 is broken with the daemonize issue that got merged back in
+cd /usr/local/src/carbon; pip install -r requirements.txt; python setup.py install
+#cd /usr/local/src/carbon; git checkout ${GRAPHITE_RELEASE}; pip install -r requirements.txt; python setup.py install
+
+# Install configuration files for Graphite Carbon
+mkdir ${GRAPHITE_CONF}/examples
+mv ${GRAPHITE_CONF}/*.example ${GRAPHITE_CONF}/examples/
+cp ${GRAPHITE_INSTALLER_HOME}/templates/graphite/conf/* ${GRAPHITE_CONF}/
+cp ${GRAPHITE_INSTALLER_HOME}/templates/init.d/carbon-relay /etc/init.d/carbon-relay
+
+update-rc.d carbon-relay defaults
+chmod +x /etc/init.d/carbon-relay
+
+# Start our processes - Since the IPs need to be set in carbon.conf we won't
+# do this automatically
+# service carbon-relay start

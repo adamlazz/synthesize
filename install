@@ -54,7 +54,7 @@ mv ${GRAPHITE_CONF}/*.example ${GRAPHITE_CONF}/examples/
 cp ${GRAPHITE_INSTALLER_HOME}/templates/graphite/conf/* ${GRAPHITE_CONF}/
 # Kind of a weird location for this but that is where graphite-api first looks
 cp ${GRAPHITE_INSTALLER_HOME}/templates/graphite-api/conf/* /etc/
-cp ${GRAPHITE_INSTALLER_HOME}/templates/init.d/* /etc/init.d/
+cp ${GRAPHITE_INSTALLER_HOME}/templates/init.d/carbon-cache /etc/init.d/carbon-cache
 cp ${GRAPHITE_INSTALLER_HOME}/templates/init/* /etc/init/
 
 # Add carbon system user and set permissions
