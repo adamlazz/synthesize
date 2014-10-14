@@ -9,4 +9,4 @@ service carbon-relay stop
 rm -r /opt/graphite
 rm -r /usr/local/src/carbon
 rm -r /srv/graphite
-rm /etc/init.d/carbon-relay
+rm /etc/init/carbon-relay.conf
