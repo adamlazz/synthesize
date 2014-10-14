@@ -54,5 +54,5 @@ DESTINATIONS = 127.0.0.1:2004:1, 127.0.0.1:2006:1
 Once `carbon.conf` has been updated in the `/opt/graphite/conf` folder you can start the `carbon-relay` service:
 
 ```
-$ service carbon-relay start
+$ sudo service carbon-relay start
 ```
