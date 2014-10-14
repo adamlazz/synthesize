@@ -24,7 +24,7 @@
 PID_DIR=/opt/graphite/storage
 DAEMON=/opt/graphite/bin/carbon-cache.py
 NAME=carbon-cache
-INSTANCES=1
+INSTANCES=2
 
 set -e
 
