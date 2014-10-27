@@ -48,7 +48,7 @@ $ sudo ./install-carbon-relay
 You will need to modify the `carbon.conf` file and ensure the IP destinations are correctly set:
 
 ```
-DESTINATIONS = 127.0.0.1:2004:1, 127.0.0.1:2006:1
+DESTINATIONS = 192.168.33.9:2004,192.168.33.10:2004
 ```
 
 Once `carbon.conf` has been updated in the `/opt/graphite/conf` folder you can start the `carbon-relay` service:
