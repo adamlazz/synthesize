@@ -45,6 +45,9 @@ mv ${GRAPHITE_CONF}/*.example ${GRAPHITE_CONF}/examples/
 cp ${GRAPHITE_INSTALLER_HOME}/templates/graphite/conf/* ${GRAPHITE_CONF}/
 cp ${GRAPHITE_INSTALLER_HOME}/templates/init.d/carbon-relay /etc/init.d/carbon-relay
 
+update-rc.d carbon-relay defaults
+chmod +x /etc/init.d/carbon-relay
+
 # Start our processes - Since the IPs need to be set in carbon.conf we won't
 # do this automatically
 # service carbon-relay start
