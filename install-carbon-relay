@@ -43,7 +43,7 @@ cd /usr/local/src/carbon; pip install -r requirements.txt; python setup.py insta
 mkdir ${GRAPHITE_CONF}/examples
 mv ${GRAPHITE_CONF}/*.example ${GRAPHITE_CONF}/examples/
 cp ${GRAPHITE_INSTALLER_HOME}/templates/graphite/conf/* ${GRAPHITE_CONF}/
-cp ${GRAPHITE_INSTALLER_HOME}/templates/init/carbon-relay.conf /etc/init/carbon-relay.conf
+cp ${GRAPHITE_INSTALLER_HOME}/templates/init.d/carbon-relay /etc/init.d/carbon-relay
 
 # Start our processes - Since the IPs need to be set in carbon.conf we won't
 # do this automatically
