@@ -15,7 +15,7 @@ GRAPHITE_HOME='/opt/graphite'
 GRAPHITE_CONF="${GRAPHITE_HOME}/conf"
 GRAPHITE_RELEASE='0.9.12'
 
-if [[ ! $UBUNTU_RELEASE =~ 'Ubuntu 14.04 LTS' ]]; then
+if [[ ! $UBUNTU_RELEASE =~ 'Ubuntu 14.04.1 LTS' ]]; then
   echo "Sorry, this is only supported for Ubuntu Linux 14.04."
   exit 1
 fi
